@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("${my.checkout.property}")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class OrderResource {
 

@@ -12,6 +12,7 @@ import com.divya.checkoutservice.exception.NoDataFoundException;
 import com.divya.checkoutservice.repository.OrderRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,9 @@ public class OrderServiceImpl implements OrderService {
     private final OrderEntityToDTOMapper orderEntityToDTOMapper;
 
     private final OrderRepo orderRepo;
+
+    @Value("${url}")
+    private String url;
 
     @Override
     public OrderDTO create(OrderDTO orderDTO) {
@@ -90,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
 
 //webclient steps
         //1 create and configure Webclient
-        WebClient webClient = WebClient.create("http://localhost:8082/orderFullFill");
+        WebClient webClient = WebClient.create(url);
 
         //2 sending request
         OrderDTO rep = webClient.post()

@@ -10,18 +10,26 @@ import com.divya.checkoutservice.entity.OrderEntity;
 import com.divya.checkoutservice.entitytodtomapper.OrderEntityToDTOMapper;
 import com.divya.checkoutservice.exception.NoDataFoundException;
 import com.divya.checkoutservice.repository.OrderRepo;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Transactional
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -48,6 +56,10 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepo orderRepo;
 
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+
+    private final RetryRegistry retryRegistry;
+
     @Value("${url}")
     private String url;
 
@@ -69,8 +81,13 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new NoDataFoundException("order not found for the id" + id));
     }
 
+    int count = 1;
+
     @Override
+//    @io.github.resilience4j.retry.annotation.Retry(name = "order-management-service")
+//    @RateLimiter(name = "order-management-service")
     public OrderDTO fullFillOrder(int id) {
+        log.info("fullFillOrder:: count:{}, time:{}", count++, LocalDateTime.now());
         Optional<OrderEntity> OrderById = orderRepo.findById(id);
 
         //entity to DTO
@@ -84,34 +101,42 @@ public class OrderServiceImpl implements OrderService {
 //        httpRequestFactory.setReadTimeout(10000);
 //        RestTemplate restTemplate = new RestTemplate(httpRequestFactory);
 
-        //use Rest templet to call order-management-service
-//        RestTemplate restTemplate = new RestTemplate();
-//        String resourceUrl
-//                = "http://localhost:8082/orderFullFill";
-//        HttpEntity<OrderDTO> orderDTOHttpEntity = new HttpEntity<>(orderDTO);
-//        ResponseEntity<OrderDTO> response =
-//                restTemplate.exchange(resourceUrl, HttpMethod.POST, orderDTOHttpEntity, OrderDTO.class);
+//        use Rest templet to call order-management-service
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("order-management-service");
+        Retry retry = retryRegistry.retry("order-management-service");
 
-//webclient steps
-        //1 create and configure Webclient
-        WebClient webClient = WebClient.create(url);
+        RestTemplate restTemplate = new RestTemplate();
+        String resourceUrl
+                = "http://localhost:8082/orderFullFill";
+        HttpEntity<OrderDTO> orderDTOHttpEntity = new HttpEntity<>(orderDTO);
+        ResponseEntity<OrderDTO> response =
+                retry.executeSupplier(() -> {
+//                        circuitBreaker.executeSupplier(() -> {
+                            log.info("fullFillOrder:: count:{}, time:{}", count++, LocalDateTime.now());
+                            return restTemplate.exchange(resourceUrl, HttpMethod.POST, orderDTOHttpEntity, OrderDTO.class);
+                        });
 
-        //2 sending request
-        OrderDTO rep = webClient.post()
-                // .uri("")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .body(Mono.just(orderDTO), OrderDTO.class)
-                .retrieve()
-                .bodyToMono(OrderDTO.class)
-                .block();
+////webclient steps
+//        //1 create and configure Webclient
+//        WebClient webClient = WebClient.create(url);
+//
+//        //2 sending request
+//        OrderDTO rep = webClient.post()
+//                // .uri("")
+//                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+//                .body(Mono.just(orderDTO), OrderDTO.class)
+//                .retrieve()
+//                .bodyToMono(OrderDTO.class)
+//                //.transformDeferred(CircuitBreaker)
+//                .block();
 
         //3 handling response
 
         //save
 //        orderRepo.save(orderDTOToEntityMapper.map(response.getBody()));
-//        return response.getBody();
+        return response.getBody();
 
-        return rep;
+//        return rep;
     }
 
 //    @Override

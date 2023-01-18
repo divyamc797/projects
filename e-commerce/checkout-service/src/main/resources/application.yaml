@@ -1,8 +1,60 @@
 spring:
   profiles: dev
 url: http://localhost:8082/orderFullFill
+
+resilience4j.circuitbreaker:
+  instances:
+    order-management-service:
+      registerHealthIndicator: true
+      slidingWindowSize: 10
+      permittedNumberOfCallsInHalfOpenState: 3
+      slidingWindowType: COUNT_BASED
+      minimumNumberOfCalls: 5
+      waitDurationInOpenState: 30s
+      failureRateThreshold: 5
+      eventConsumerBufferSize: 10
 ---
 
 spring:
   profiles: prod
 url: http://localhost:8082/orderFullFill
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j.circuitbreaker:
+  instances:
+    order-management-service:
+      registerHealthIndicator: true
+      eventConsumerBufferSize: 10
+      failureRateThreshold: 100
+      minimumNumberOfCalls: 5
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      waitDurationInOpenState: 15s
+      permittedNumberOfCallsInHalfOpenState: 3
+      slidingWindowSize: 10
+      slidingWindowType: COUNT_BASED
+
+retry:
+  instances:
+    order-management-service:
+      registerHealthIndicator: true
+      maxRetryAttempts: 5
+      waitDuration: 10s
+
+ratelimiter:
+  instances:
+    order-management-service:
+      registerHealthIndicator: true
+      limitForPeriod: 1
+      limitRefreshPeriod: 10s
+      timeoutDuration: 3s

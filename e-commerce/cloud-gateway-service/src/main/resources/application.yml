@@ -1,0 +1,15 @@
+server:
+  port: 8085
+
+#spring:
+#  cloud:
+#    gateway:
+#      routes:
+#        - id: createOrder
+#          uri: http://localhost:8080/orders
+#          predicates:
+#            - Path=/orders
+#        - id: consumerModule
+#          uri: http://localhost:8082/
+#          predicates:
+#            - Path=/consumer/**

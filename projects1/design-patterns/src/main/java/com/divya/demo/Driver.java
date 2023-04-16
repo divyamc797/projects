@@ -1,2 +1,4 @@
-package com.divya.demo;public class Driver {
+package com.divya.demo;
+
+public class Driver {
 }

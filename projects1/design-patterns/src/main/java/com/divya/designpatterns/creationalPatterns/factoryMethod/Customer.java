@@ -1,2 +1,5 @@
-package com.divya.designpatterns.creationalPatterns.factoryMethod;public class Customer {
+package com.divya.designpatterns.creationalPatterns.factoryMethod;
+
+public interface Customer {
+    int getDiscount();
 }

@@ -1,2 +1,10 @@
-package com.divya.practices.comparatorSample;public class SalaryCompartor {
+package com.divya.practices.comparatorSample;
+
+import java.util.Comparator;
+
+public class SalaryComparator implements Comparator<Employee> {
+    @Override
+    public int compare(Employee o1, Employee o2) {
+        return o2.getSalary() - o1.getSalary();
+    }
 }

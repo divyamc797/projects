@@ -1,6 +1,6 @@
 spring:
   profiles: dev
-url: http://localhost:8082/orderFullFill
+url: http://localhost:8085/orderFullFill
 
 resilience4j.circuitbreaker:
   instances:
@@ -17,7 +17,7 @@ resilience4j.circuitbreaker:
 
 spring:
   profiles: prod
-url: http://localhost:8082/orderFullFill
+url: http://ORDER-MANAGEMENT-SERVICE/orderFullFill
 
 management:
   health:

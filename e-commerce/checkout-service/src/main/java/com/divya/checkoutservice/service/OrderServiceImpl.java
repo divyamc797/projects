@@ -60,6 +60,8 @@ public class OrderServiceImpl implements OrderService {
 
     private final RetryRegistry retryRegistry;
 
+    private final RestTemplate restTemplate;
+
     @Value("${url}")
     private String url;
 
@@ -105,15 +107,12 @@ public class OrderServiceImpl implements OrderService {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("order-management-service");
         Retry retry = retryRegistry.retry("order-management-service");
 
-        RestTemplate restTemplate = new RestTemplate();
-        String resourceUrl
-                = "http://localhost:8082/orderFullFill";
         HttpEntity<OrderDTO> orderDTOHttpEntity = new HttpEntity<>(orderDTO);
         ResponseEntity<OrderDTO> response =
                 retry.executeSupplier(() -> {
 //                        circuitBreaker.executeSupplier(() -> {
                             log.info("fullFillOrder:: count:{}, time:{}", count++, LocalDateTime.now());
-                            return restTemplate.exchange(resourceUrl, HttpMethod.POST, orderDTOHttpEntity, OrderDTO.class);
+                            return restTemplate.exchange(url, HttpMethod.POST, orderDTOHttpEntity, OrderDTO.class);
                         });
 
 ////webclient steps

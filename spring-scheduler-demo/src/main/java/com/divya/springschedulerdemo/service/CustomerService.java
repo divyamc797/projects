@@ -1,2 +1,7 @@
-package com.divya.springschedulerdemo.service;public interface CustomerService {
+package com.divya.springschedulerdemo.service;
+
+import com.divya.springschedulerdemo.model.CustomerModel;
+
+public interface CustomerService {
+     CustomerModel createCustomer(CustomerModel customerModel);
 }
